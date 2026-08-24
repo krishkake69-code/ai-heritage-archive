@@ -7,7 +7,8 @@ import { validateMediaUpload } from "./media";
 import { storagePut } from "./storage";
 import { getDb } from "./db";
 import { searchDocuments } from "../drizzle/schema";
-import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { publicProcedure, rateLimitedAdminProcedure, rateLimitedProtectedProcedure, rateLimitedPublicProcedure, router } from "./_core/trpc";
+import { rateLimitPolicies } from "./rateLimit";
 import {
   categories,
   getRecord,
@@ -84,19 +85,19 @@ export const appRouter = router({
     }),
   }),
   archive: router({
-    filters: publicProcedure.query(() => ({ categories, languages, riskLevels, verificationLevels, statesAndRegions })),
-    directoryFilters: publicProcedure.query(() => ({
+    filters: rateLimitedPublicProcedure("archive_public_read", rateLimitPolicies.publicRead).query(() => ({ categories, languages, riskLevels, verificationLevels, statesAndRegions })),
+    directoryFilters: rateLimitedPublicProcedure("archive_public_read", rateLimitPolicies.publicRead).query(() => ({
       crafts: ["All crafts", ...Array.from(new Set(practitioners.filter((person) => person.isPublic).flatMap((person) => person.specialties))).sort((a, b) => a.localeCompare(b))],
       statesAndRegions,
     })),
-    summary: publicProcedure.query(() => ({
+    summary: rateLimitedPublicProcedure("archive_public_read", rateLimitPolicies.publicRead).query(() => ({
       records: seedRecords.filter((record) => record.publicationState === "public").length,
       traditions: new Set(seedRecords.map((record) => record.category)).size,
       practitioners: practitioners.filter((person) => person.isPublic).length,
       atRisk: seedRecords.filter((record) => ["high", "critical"].includes(record.risk.level)).length,
       regions: statesAndRegions.slice(1).map((region) => ({ label: region, count: seedRecords.filter((record) => record.region === region).length, detail: "National orientation coverage" })),
     })),
-    list: publicProcedure.input(z.object({
+    list: rateLimitedPublicProcedure("archive_public_read", rateLimitPolicies.publicRead).input(z.object({
       query: z.string().optional(),
       category: z.string().optional(),
       region: z.string().optional(),
@@ -120,13 +121,13 @@ export const appRouter = router({
         return true;
       }).slice(0, input.limit);
     }),
-    get: publicProcedure.input(z.object({ slug: z.string() })).query(({ input }) => {
+    get: rateLimitedPublicProcedure("archive_public_read", rateLimitPolicies.publicRead).input(z.object({ slug: z.string() })).query(({ input }) => {
       const record = findRecord(input.slug);
       const visible = record && (record.publicationState === "public" || record.isDemo);
       if (!visible) throw new TRPCError({ code: "NOT_FOUND", message: "This record is not publicly available." });
       return { record, verification: reviewEvents.get(input.slug) ?? [] };
     }),
-    map: publicProcedure.query(() => seedRecords.filter((record) => record.publicationState === "public").map((record) => ({
+    map: rateLimitedPublicProcedure("archive_public_read", rateLimitPolicies.publicRead).query(() => seedRecords.filter((record) => record.publicationState === "public").map((record) => ({
       id: record.id,
       slug: record.slug,
       title: record.title,
@@ -137,13 +138,13 @@ export const appRouter = router({
       risk: record.risk,
       status: statusLabel(record.status),
     }))),
-    mapSummary: publicProcedure.query(() => {
+    mapSummary: rateLimitedPublicProcedure("archive_public_read", rateLimitPolicies.publicRead).query(() => {
       const publicRecords = seedRecords.filter((record) => record.publicationState === "public");
       const regions = Array.from(new Set(publicRecords.map((record) => record.region))).map((region) => ({ label: region, count: publicRecords.filter((record) => record.region === region).length, records: publicRecords.filter((record) => record.region === region).map((record) => record.title) }));
       const categories = Array.from(new Set(publicRecords.map((record) => record.category))).map((category) => ({ label: category, count: publicRecords.filter((record) => record.category === category).length }));
       return { regions, categories, publishedCount: publicRecords.length, seededCount: seedRecords.length };
     }),
-    practitioners: publicProcedure.input(z.object({
+    practitioners: rateLimitedPublicProcedure("archive_public_read", rateLimitPolicies.publicRead).input(z.object({
       query: z.string().optional(),
       craft: z.string().optional(),
       region: z.string().optional(),
@@ -159,13 +160,13 @@ export const appRouter = router({
       if (input.workshopOnly && !person.workshopAvailable) return false;
       return true;
     })),
-    practitioner: publicProcedure.input(z.object({ id: z.string() })).query(({ input }) => {
+    practitioner: rateLimitedPublicProcedure("archive_public_read", rateLimitPolicies.publicRead).input(z.object({ id: z.string() })).query(({ input }) => {
       const person = practitioners.find((candidate) => candidate.id === input.id && candidate.isPublic);
       if (!person) throw new TRPCError({ code: "NOT_FOUND", message: "This practitioner profile is not publicly available." });
       const approvedRecords = seedRecords.filter((record) => record.practitionerId === person.id && record.publicationState === "public");
       return { person, approvedRecords };
     }),
-    createDraft: protectedProcedure.input(z.object({
+    createDraft: rateLimitedProtectedProcedure("archive_draft_creation", rateLimitPolicies.draftCreation).input(z.object({
       title: z.string().min(3),
       category: z.string().min(2),
       language: z.string().min(2),
@@ -200,7 +201,7 @@ export const appRouter = router({
       reviewEvents.set(slug, []);
       return { draft, next: "ready_to_process" as const };
     }),
-    uploadMedia: protectedProcedure.input(z.object({ slug: z.string(), fileName: z.string().min(1).max(180), mimeType: z.string().min(3), dataBase64: z.string().min(8) })).mutation(async ({ input }) => {
+    uploadMedia: rateLimitedProtectedProcedure("archive_media_upload", rateLimitPolicies.mediaUpload).input(z.object({ slug: z.string(), fileName: z.string().min(1).max(180), mimeType: z.string().min(3), dataBase64: z.string().min(8) })).mutation(async ({ input }) => {
       const draft = drafts.get(input.slug);
       if (!draft) throw new TRPCError({ code: "NOT_FOUND", message: "Draft not found." });
       const data = Buffer.from(input.dataBase64, "base64");
@@ -210,7 +211,7 @@ export const appRouter = router({
       drafts.set(input.slug, next);
       return { draft: next, media: stored, kind };
     }),
-    processDraft: protectedProcedure.input(z.object({ slug: z.string(), useDemoFallback: z.boolean().default(true) })).mutation(async ({ input }) => {
+    processDraft: rateLimitedProtectedProcedure("archive_ai_processing", rateLimitPolicies.aiProcessing).input(z.object({ slug: z.string(), useDemoFallback: z.boolean().default(true) })).mutation(async ({ input }) => {
       const draft = drafts.get(input.slug);
       if (!draft) throw new TRPCError({ code: "NOT_FOUND", message: "Draft not found." });
       const template = seedRecords[0];
@@ -227,14 +228,14 @@ export const appRouter = router({
       drafts.set(input.slug, next);
       return { draft: next, processing: ["Transcript captured", "Translation prepared", "Knowledge fields structured", "Evidence links attached"], fallback: false };
     }),
-    updateDraft: protectedProcedure.input(z.object({ slug: z.string(), summary: z.string().min(10), significance: z.string().min(10) })).mutation(({ input }) => {
+    updateDraft: rateLimitedProtectedProcedure("archive_draft_update", rateLimitPolicies.draftUpdate).input(z.object({ slug: z.string(), summary: z.string().min(10), significance: z.string().min(10) })).mutation(({ input }) => {
       const draft = drafts.get(input.slug);
       if (!draft) throw new TRPCError({ code: "NOT_FOUND", message: "Draft not found." });
       const next = { ...draft, knowledge: draft.knowledge.map((section) => section.kind === "summary" ? { ...section, content: input.summary, status: "Human edited" as const } : section.kind === "significance" ? { ...section, content: input.significance, status: "Human edited" as const } : section) };
       drafts.set(input.slug, next);
       return next;
     }),
-    submitForReview: protectedProcedure.input(z.object({ slug: z.string(), note: z.string().min(10) })).mutation(async ({ input, ctx }) => {
+    submitForReview: rateLimitedProtectedProcedure("archive_review_submission", rateLimitPolicies.reviewSubmission).input(z.object({ slug: z.string(), note: z.string().min(10) })).mutation(async ({ input, ctx }) => {
       const draft = drafts.get(input.slug);
       if (!draft) throw new TRPCError({ code: "NOT_FOUND", message: "Draft not found." });
       const next = { ...draft, status: "pending" as const };
@@ -245,8 +246,8 @@ export const appRouter = router({
       const notified = await notifyOwner({ title: "Heritage record ready for review", content: `${draft.title} was submitted with source-linked fields. Contributor note: ${input.note}` });
       return { record: next, notified };
     }),
-    reviewQueue: adminProcedure.query(() => allRecords().filter((record) => record.status === "pending" || record.status === "changes_requested")),
-    reviewDecision: adminProcedure.input(z.object({ slug: z.string(), decision: z.enum(["community", "expert", "changes_requested"]), comment: z.string().min(10) })).mutation(async ({ input, ctx }) => {
+    reviewQueue: rateLimitedAdminProcedure("archive_reviewer_read", rateLimitPolicies.publicRead).query(() => allRecords().filter((record) => record.status === "pending" || record.status === "changes_requested")),
+    reviewDecision: rateLimitedAdminProcedure("archive_reviewer_decision", rateLimitPolicies.reviewerDecision).input(z.object({ slug: z.string(), decision: z.enum(["community", "expert", "changes_requested"]), comment: z.string().min(10) })).mutation(async ({ input, ctx }) => {
       const record = drafts.get(input.slug) ?? getRecord(input.slug);
       if (!record) throw new TRPCError({ code: "NOT_FOUND", message: "Record not found." });
       const next = { ...record, status: input.decision === "changes_requested" ? "changes_requested" as const : input.decision, publicationState: input.decision === "changes_requested" ? "preview" as const : "public" as const };

@@ -35,3 +35,8 @@
 - [x] Expand automated coverage for national scope, complete State or region filter options, and public-safe publication rules
 - [x] Nationalize the Find a Master filter model and clearly represent its consented-directory coverage limits
 - [x] Add regression coverage for the complete State or region filter list and national filter behavior
+- [x] Define rate-limit policies for public discovery, media uploads, AI processing, draft submissions, and reviewer decisions
+- [x] Implement reusable server-side rate limiting with authenticated-user and anonymous-request identifiers
+- [x] Add clear retry guidance in client error feedback and automated tests for limit enforcement
+- [x] Add rate-limit retry guidance for contributor save and review-submission actions plus throttled public reads
+- [x] Add integration coverage that verifies archive procedures return TOO_MANY_REQUESTS when their real limits are exceeded

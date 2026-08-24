@@ -164,6 +164,20 @@ export const searchDocuments = mysqlTable("search_documents", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
+/**
+ * Fixed-window counters for rate-limit enforcement. The caller identifier is
+ * hashed before storage so the table never retains raw IP addresses or IDs.
+ */
+export const rateLimitCounters = mysqlTable("rate_limit_counters", {
+  bucketKey: varchar("bucketKey", { length: 255 }).primaryKey(),
+  scope: varchar("scope", { length: 80 }).notNull(),
+  identifierHash: varchar("identifierHash", { length: 64 }).notNull(),
+  windowStartedAt: timestamp("windowStartedAt").notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  count: int("count").default(0).notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({ expiresAtIdx: index("rate_limit_counters_expires_idx").on(table.expiresAt) }));
+
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type HeritageRecord = typeof heritageRecords.$inferSelect;
@@ -173,3 +187,4 @@ export type KnowledgeSection = typeof knowledgeSections.$inferSelect;
 export type RiskAssessment = typeof riskAssessments.$inferSelect;
 export type VerificationEvent = typeof verificationEvents.$inferSelect;
 export type EntityRelationship = typeof entityRelationships.$inferSelect;
+export type RateLimitCounter = typeof rateLimitCounters.$inferSelect;
