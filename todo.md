@@ -28,3 +28,10 @@
 - [x] Add practitioner detail routes with links to approved related heritage records
 - [x] Expand tests for AI contracts, upload validation/storage paths, draft lifecycle, review decisions, notifications, and seeded data quality
 - [x] Prevent detached map initialization from logging “Map container not found” on non-map routes
+- [x] Replace Assam-only framing with a pan-India archive scope covering the listed States plus Jammu–Kashmir and Ladakh
+- [x] Add a normalized State or region field across public records, map data, practitioner profiles, search filters, submission metadata, and review context
+- [x] Seed representative, clearly labeled demonstration records across every requested State or region without presenting generated content as field-verified testimony
+- [x] Refactor national archive discovery, search, map summaries, directory filters, and editorial copy while preserving consent and verification visibility
+- [x] Expand automated coverage for national scope, complete State or region filter options, and public-safe publication rules
+- [x] Nationalize the Find a Master filter model and clearly represent its consented-directory coverage limits
+- [x] Add regression coverage for the complete State or region filter list and national filter behavior

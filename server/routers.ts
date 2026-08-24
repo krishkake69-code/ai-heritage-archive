@@ -16,6 +16,7 @@ import {
   practitioners,
   records as seedRecords,
   riskLevels,
+  statesAndRegions,
   statusLabel,
   verificationLevels,
   type HeritageRecord,
@@ -83,17 +84,22 @@ export const appRouter = router({
     }),
   }),
   archive: router({
-    filters: publicProcedure.query(() => ({ categories, languages, riskLevels, verificationLevels })),
+    filters: publicProcedure.query(() => ({ categories, languages, riskLevels, verificationLevels, statesAndRegions })),
+    directoryFilters: publicProcedure.query(() => ({
+      crafts: ["All crafts", ...Array.from(new Set(practitioners.filter((person) => person.isPublic).flatMap((person) => person.specialties))).sort((a, b) => a.localeCompare(b))],
+      statesAndRegions,
+    })),
     summary: publicProcedure.query(() => ({
       records: seedRecords.filter((record) => record.publicationState === "public").length,
       traditions: new Set(seedRecords.map((record) => record.category)).size,
       practitioners: practitioners.filter((person) => person.isPublic).length,
       atRisk: seedRecords.filter((record) => ["high", "critical"].includes(record.risk.level)).length,
-      regions: [{ label: "Assam", count: seedRecords.length, detail: "5 seeded living traditions" }],
+      regions: statesAndRegions.slice(1).map((region) => ({ label: region, count: seedRecords.filter((record) => record.region === region).length, detail: "National orientation coverage" })),
     })),
     list: publicProcedure.input(z.object({
       query: z.string().optional(),
       category: z.string().optional(),
+      region: z.string().optional(),
       language: z.string().optional(),
       risk: z.string().optional(),
       verification: z.string().optional(),
@@ -106,6 +112,7 @@ export const appRouter = router({
         if (record.publicationState !== "public") return false;
         if (indexedIds && !indexedIds.has(record.id)) return false;
         if (!matchesRecord(record, input.query ?? "")) return false;
+        if (input.region && input.region !== "All States & regions" && record.region !== input.region) return false;
         if (input.category && input.category !== "All categories" && record.category !== input.category) return false;
         if (input.language && input.language !== "All languages" && record.originalLanguage !== input.language) return false;
         if (risk && record.risk.level !== risk) return false;
@@ -124,6 +131,7 @@ export const appRouter = router({
       slug: record.slug,
       title: record.title,
       category: record.category,
+      region: record.region,
       district: record.district,
       coordinates: record.coordinates,
       risk: record.risk,
@@ -131,13 +139,14 @@ export const appRouter = router({
     }))),
     mapSummary: publicProcedure.query(() => {
       const publicRecords = seedRecords.filter((record) => record.publicationState === "public");
-      const regions = Array.from(new Set(publicRecords.map((record) => record.district))).map((district) => ({ label: district, count: publicRecords.filter((record) => record.district === district).length, records: publicRecords.filter((record) => record.district === district).map((record) => record.title) }));
+      const regions = Array.from(new Set(publicRecords.map((record) => record.region))).map((region) => ({ label: region, count: publicRecords.filter((record) => record.region === region).length, records: publicRecords.filter((record) => record.region === region).map((record) => record.title) }));
       const categories = Array.from(new Set(publicRecords.map((record) => record.category))).map((category) => ({ label: category, count: publicRecords.filter((record) => record.category === category).length }));
       return { regions, categories, publishedCount: publicRecords.length, seededCount: seedRecords.length };
     }),
     practitioners: publicProcedure.input(z.object({
       query: z.string().optional(),
       craft: z.string().optional(),
+      region: z.string().optional(),
       verification: z.string().optional(),
       workshopOnly: z.boolean().default(false),
     })).query(({ input }) => practitioners.filter((person) => {
@@ -145,6 +154,7 @@ export const appRouter = router({
       const query = input.query?.trim().toLowerCase();
       if (query && ![person.displayName, person.role, person.region, person.district, ...person.specialties].join(" ").toLowerCase().includes(query)) return false;
       if (input.craft && input.craft !== "All crafts" && !person.specialties.includes(input.craft)) return false;
+      if (input.region && input.region !== "All States & regions" && person.region !== input.region) return false;
       if (input.verification && input.verification !== "All verification" && statusLabel(person.verificationStatus) !== input.verification) return false;
       if (input.workshopOnly && !person.workshopAvailable) return false;
       return true;
@@ -159,6 +169,7 @@ export const appRouter = router({
       title: z.string().min(3),
       category: z.string().min(2),
       language: z.string().min(2),
+      region: z.string().min(2).optional(),
       practitionerName: z.string().min(2),
       district: z.string().min(2),
       contributorNote: z.string().min(10),
@@ -171,9 +182,10 @@ export const appRouter = router({
         id: `draft-${Date.now()}`,
         slug,
         title: input.title,
-        eyebrow: `${input.category} · Assam`,
+        eyebrow: `${input.category} · ${input.region ?? "Not specified"}`,
         shortDescription: input.contributorNote,
         category: input.category,
+        region: input.region ?? "Not specified",
         district: input.district,
         originalLanguage: input.language,
         practitionerName: input.practitionerName,

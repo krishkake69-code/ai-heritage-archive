@@ -29,11 +29,24 @@ function adminContext(): TrpcContext {
 }
 
 describe("archive discovery", () => {
-  it("returns the five public Assam pilot records", async () => {
+  it("returns publicly discoverable national coverage and filters it by State or region", async () => {
     const caller = appRouter.createCaller(publicContext());
-    const result = await caller.archive.list({ limit: 20 });
-    expect(result).toHaveLength(4);
-    expect(result.every((record) => record.region === "Assam")).toBe(true);
+    const result = await caller.archive.list({ limit: 50 });
+    const gujarat = await caller.archive.list({ region: "Gujarat", limit: 20 });
+    expect(result).toHaveLength(33);
+    expect(new Set(result.map((record) => record.region))).toHaveLength(30);
+    expect(gujarat).toHaveLength(1);
+    expect(gujarat[0]?.region).toBe("Gujarat");
+  });
+
+  it("returns the full State or region filter set and consented-directory filter options", async () => {
+    const caller = appRouter.createCaller(publicContext());
+    const filters = await caller.archive.filters();
+    const directoryFilters = await caller.archive.directoryFilters();
+    expect(filters.statesAndRegions).toHaveLength(31);
+    expect(filters.statesAndRegions).toEqual(expect.arrayContaining(["Andhra Pradesh", "Assam", "Tamil Nadu", "Ladakh", "Jammu & Kashmir"]));
+    expect(directoryFilters.statesAndRegions).toEqual(filters.statesAndRegions);
+    expect(directoryFilters.crafts).toEqual(expect.arrayContaining(["All crafts", "Bamboo craft", "Hand weaving", "Folk music"]));
   });
 
   it("matches natural-language terms across record content", async () => {
@@ -57,16 +70,16 @@ describe("archive discovery", () => {
     const map = await caller.archive.map();
     expect(detail.record?.sourceLabel).toContain("Video #104");
     expect(detail.record?.knowledge.every((section) => section.evidence.quote.length > 0)).toBe(true);
-    expect(map).toHaveLength(4);
-    expect(map.every((point) => point.coordinates && point.district)).toBe(true);
+    expect(map).toHaveLength(33);
+    expect(map.every((point) => point.coordinates && point.district && point.region)).toBe(true);
   });
 
   it("returns public-safe region and category aggregates for the map", async () => {
     const caller = appRouter.createCaller(publicContext());
     const summary = await caller.archive.mapSummary();
-    expect(summary.seededCount).toBe(5);
-    expect(summary.publishedCount).toBe(4);
-    expect(summary.regions.length).toBeGreaterThan(0);
+    expect(summary.seededCount).toBe(34);
+    expect(summary.publishedCount).toBe(33);
+    expect(summary.regions).toHaveLength(30);
     expect(summary.categories.length).toBeGreaterThan(0);
   });
 

@@ -81,13 +81,13 @@ export default function ArchiveLayout({ children }: { children: React.ReactNode 
         <div className="mx-auto grid max-w-[1440px] gap-10 px-5 py-12 sm:px-8 lg:grid-cols-[1.2fr_.8fr_.8fr] lg:px-12">
           <div>
             <div className="mb-5 flex items-center gap-3"><span className="grid size-9 place-items-center rounded-full bg-accent text-accent-foreground"><span className="font-display text-xl">अ</span></span><span className="font-display text-2xl">AI Heritage Archive</span></div>
-            <p className="max-w-sm text-sm leading-6 text-primary-foreground/65">A source-linked living archive for Assam’s voices, skills, objects, and seasonal memory. Built to preserve with care, not to replace community knowledge.</p>
+            <p className="max-w-sm text-sm leading-6 text-primary-foreground/65">A source-linked living archive for India’s voices, skills, objects, and seasonal memory. Built to preserve with care, not to replace community knowledge.</p>
             <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-primary-foreground/15 px-3 py-2 text-[10px] font-bold uppercase tracking-[0.14em] text-primary-foreground/70"><ShieldCheck className="size-3.5 text-accent" /> Consent-led by design</div>
           </div>
           <div><p className="mb-4 font-mono-archive text-[10px] uppercase tracking-[0.2em] text-accent">Explore</p><div className="grid gap-3 text-sm text-primary-foreground/70"><Link href="/explore" className="hover:text-white">All records</Link><Link href="/map" className="hover:text-white">Heritage map</Link><Link href="/masters" className="hover:text-white">Find a master</Link></div></div>
           <div><p className="mb-4 font-mono-archive text-[10px] uppercase tracking-[0.2em] text-accent">Participate</p><div className="grid gap-3 text-sm text-primary-foreground/70"><Link href="/document" className="hover:text-white">Document heritage</Link><Link href="/verify" className="hover:text-white">Verify a record</Link><a href="mailto:archive@example.org" className="hover:text-white">Contact the archive</a></div></div>
         </div>
-        <div className="mx-auto flex max-w-[1440px] flex-col justify-between gap-2 border-t border-primary-foreground/10 px-5 py-5 text-[10px] uppercase tracking-[0.14em] text-primary-foreground/45 sm:flex-row sm:px-8 lg:px-12"><span>Assam pilot · five seeded traditions</span><span>AI-assisted · human-verified</span></div>
+        <div className="mx-auto flex max-w-[1440px] flex-col justify-between gap-2 border-t border-primary-foreground/10 px-5 py-5 text-[10px] uppercase tracking-[0.14em] text-primary-foreground/45 sm:flex-row sm:px-8 lg:px-12"><span>National coverage · source-led publication</span><span>AI-assisted · human-verified</span></div>
       </footer>
     </div>
   );

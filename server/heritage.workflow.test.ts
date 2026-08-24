@@ -43,8 +43,9 @@ describe("heritage workflow contracts", () => {
 
   it("creates, processes, edits, submits, and notifies without publishing early", async () => {
     const caller = appRouter.createCaller(context());
-    const created = await caller.archive.createDraft({ title: "A consented Mising song", category: "Folk music", language: "Mising", practitionerName: "Demo knowledge holder", district: "Dibrugarh", contributorNote: "A private demonstration submitted for careful community review.", consentConfirmed: true });
+    const created = await caller.archive.createDraft({ title: "A consented regional song", category: "Folk music", language: "Tamil", region: "Tamil Nadu", practitionerName: "Demo knowledge holder", district: "Chennai", contributorNote: "A private demonstration submitted for careful community review.", consentConfirmed: true });
     expect(created.draft.publicationState).toBe("preview");
+    expect(created.draft.region).toBe("Tamil Nadu");
     const processed = await caller.archive.processDraft({ slug: created.draft.slug, useDemoFallback: true });
     const summary = processed.draft?.knowledge.find((section) => section.kind === "summary");
     const edited = await caller.archive.updateDraft({ slug: created.draft.slug, summary: String(summary?.content ?? "A source-linked song record for review."), significance: "The contributor has asked reviewers to preserve the setting and language context." });
@@ -69,10 +70,16 @@ describe("heritage workflow contracts", () => {
     expect(publicRecord.record?.publicationState).toBe("public");
   });
 
-  it("keeps all five seeded traditions Assam-focused and evidence-linked", () => {
-    expect(records).toHaveLength(5);
-    expect(records.every((record) => record.region === "Assam")).toBe(true);
-    expect(records.every((record) => record.knowledge.every((section) => section.evidence.quote.length > 0 && section.evidence.timecode.length > 0))).toBe(true);
+  it("covers every requested State or region while keeping orientation cards distinct from primary evidence", () => {
+    const requestedCoverage = ["Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal", "Ladakh", "Jammu & Kashmir"];
+    const coveredRegions = new Set(records.map((record) => record.region));
+    const sourceLinkedAssamRecords = records.filter((record) => record.region === "Assam");
+    const orientationRecords = records.filter((record) => Boolean(record.referenceUrl));
+    expect(requestedCoverage.every((region) => coveredRegions.has(region))).toBe(true);
+    expect(sourceLinkedAssamRecords).toHaveLength(5);
+    expect(sourceLinkedAssamRecords.every((record) => record.knowledge.every((section) => section.evidence.quote.length > 0 && section.evidence.timecode.length > 0))).toBe(true);
+    expect(orientationRecords).toHaveLength(29);
+    expect(orientationRecords.every((record) => record.status === "pending" && record.risk.level === "unassessed" && record.referenceUrl)).toBe(true);
     expect(practitioners.every((person) => !person.isPublic || person.archiveCount >= 0)).toBe(true);
   });
 });

@@ -5,16 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { trpc } from "@/lib/trpc";
 import { StatusBadge, SectionHeading } from "@/components/ArchivePrimitives";
+import { statesAndRegions } from "@shared/heritage";
 
-const craftOptions = ["All crafts", "Bamboo craft", "Basketry", "Hand weaving", "Folk music", "Seasonal food"];
 const verificationOptions = ["All verification", "Pending verification", "Community verified", "Expert verified"];
 
 export default function FindMaster() {
   const [query, setQuery] = useState("");
   const [craft, setCraft] = useState("All crafts");
+  const [region, setRegion] = useState("All States & regions");
   const [verification, setVerification] = useState("All verification");
   const [workshopOnly, setWorkshopOnly] = useState(false);
-  const input = useMemo(() => ({ query, craft, verification, workshopOnly }), [query, craft, verification, workshopOnly]);
+  const input = useMemo(() => ({ query, craft, region, verification, workshopOnly }), [query, craft, region, verification, workshopOnly]);
+  const { data: directoryFilters } = trpc.archive.directoryFilters.useQuery();
   const { data: people = [], isLoading } = trpc.archive.practitioners.useQuery(input);
 
   return (
@@ -25,20 +27,21 @@ export default function FindMaster() {
           <h1 className="mt-4 max-w-3xl font-display text-6xl leading-[.87] tracking-[-.05em] text-primary sm:text-8xl">Meet the people<br />who keep it <em className="text-accent">alive.</em></h1>
         </div>
         <div>
-          <p className="text-lg leading-8 text-muted-foreground">Discover public profiles of knowledge holders who have agreed to be listed in this pilot. Every profile shows its verification status and links back to approved archive material.</p>
+          <p className="text-lg leading-8 text-muted-foreground">Discover public profiles of knowledge holders who have agreed to be listed. National archive coverage does not create a public profile automatically; every listing remains opt-in and linked only to approved archive material.</p>
           <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground"><span className="grid size-7 place-items-center rounded-full bg-[#e6f3e9] text-[#2f654d]"><Check className="size-3.5" /></span> Consent to public listing is required</div>
         </div>
       </div>
 
-      <div className="mt-10 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-[1.4fr_.8fr_.8fr_auto] sm:items-center">
-        <div className="relative"><Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-accent" /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by name, craft, or district" className="h-11 rounded-xl border-border bg-background pl-10" /></div>
-        <FilterSelect value={craft} onChange={setCraft} options={craftOptions} ariaLabel="Filter by craft" />
+      <div className="mt-10 grid gap-3 rounded-2xl border border-border bg-card p-4 sm:grid-cols-[1.4fr_.8fr_.8fr_.8fr_auto] sm:items-center">
+        <div className="relative"><Search className="absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-accent" /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search by name, craft, State, or district" className="h-11 rounded-xl border-border bg-background pl-10" /></div>
+        <FilterSelect value={craft} onChange={setCraft} options={directoryFilters?.crafts ?? ["All crafts"]} ariaLabel="Filter by craft" />
+        <FilterSelect value={region} onChange={setRegion} options={directoryFilters?.statesAndRegions ?? statesAndRegions} ariaLabel="Filter by State or region" />
         <FilterSelect value={verification} onChange={setVerification} options={verificationOptions} ariaLabel="Filter by verification" />
         <Button variant={workshopOnly ? "default" : "outline"} className="h-11 rounded-xl text-xs" onClick={() => setWorkshopOnly((value) => !value)}><GraduationCap className="mr-2 size-4" /> Workshops</Button>
       </div>
 
       <div className="mt-12">
-        <SectionHeading kicker={`${people.length} public profiles`} title="Knowledge holders, with consent." description="This directory is intentionally small. It is a bridge to living practitioners, not a substitute for their voice or a promise of availability." />
+        <SectionHeading kicker={`${people.length} public profiles`} title="Knowledge holders, with consent." description="This directory is intentionally opt-in. Craft filters only reflect specialties of currently consented public profiles; national orientation cards never create a person listing. It is not a national roster or a promise of availability." />
         {isLoading && <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"><LoadingCard /><LoadingCard /><LoadingCard /></div>}
         {!isLoading && people.length > 0 && <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">{people.map((person) => <PersonCard key={person.id} person={person} />)}</div>}
         {!isLoading && people.length === 0 && <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center"><UserRound className="mx-auto size-7 text-accent" /><h3 className="mt-3 font-display text-3xl text-primary">No public profile matches yet.</h3><p className="mt-2 text-sm text-muted-foreground">Try clearing one of the directory filters.</p></div>}

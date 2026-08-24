@@ -1,5 +1,5 @@
 export type HeritageStatus = "pending" | "community" | "expert" | "changes_requested";
-export type RiskLevel = "low" | "moderate" | "high" | "critical";
+export type RiskLevel = "low" | "moderate" | "high" | "critical" | "unassessed";
 export type KnowledgeKind = "summary" | "procedure" | "materials" | "tools" | "significance" | "metadata" | "uncertainty";
 
 export type Evidence = {
@@ -18,7 +18,7 @@ export type KnowledgeBlock = {
 };
 
 export type RiskAssessment = {
-  score: number;
+  score?: number;
   level: RiskLevel;
   explanation: string;
   factors: Array<{ label: string; value: string; note: string }>;
@@ -57,6 +57,7 @@ export type HeritageRecord = {
   publicationState: "public" | "preview";
   isDemo: boolean;
   sourceLabel: string;
+  referenceUrl?: string;
   media: Array<{ type: "video" | "audio" | "photo" | "text"; label: string; url: string; duration?: string }>;
   knowledge: KnowledgeBlock[];
   relationships: Array<{ type: string; label: string; detail: string }>;
@@ -128,7 +129,7 @@ export const practitioners: Practitioner[] = [
   },
 ];
 
-export const records: HeritageRecord[] = [
+const assamRecords: HeritageRecord[] = [
   {
     id: "r-bamboo",
     slug: "bamboo-basketry-majuli",
@@ -287,8 +288,92 @@ export const records: HeritageRecord[] = [
   },
 ];
 
-export const categories = ["All categories", "Traditional craft", "Traditional weaving", "Festival & oral tradition", "Folk music", "Traditional food knowledge"];
-export const languages = ["All languages", "Assamese", "Mising"];
+type NationalOrientationSeed = {
+  region: string;
+  district: string;
+  tradition: string;
+  category: string;
+  coordinates: { lat: number; lng: number };
+  reference: string;
+};
+
+const nationalOrientationSeeds: NationalOrientationSeed[] = [
+  { region: "Andhra Pradesh", district: "Sri Sathya Sai", tradition: "Kalamkari painting", category: "Visual arts", coordinates: { lat: 14.47, lng: 77.98 }, reference: "Sangeet Natak Akademi ICH inventory" },
+  { region: "Arunachal Pradesh", district: "Tawang", tradition: "Aji Lamu pantomime", category: "Ritual & performance", coordinates: { lat: 27.59, lng: 91.86 }, reference: "Sangeet Natak Akademi ICH inventory" },
+  { region: "Bihar", district: "Madhubani", tradition: "Mithila painting traditions", category: "Visual arts", coordinates: { lat: 26.35, lng: 86.07 }, reference: "National orientation reference" },
+  { region: "Chhattisgarh", district: "Raipur", tradition: "Nacha folk theatre", category: "Ritual & performance", coordinates: { lat: 21.25, lng: 81.63 }, reference: "Sangeet Natak Akademi ICH inventory" },
+  { region: "Goa", district: "North Goa", tradition: "Tiatr theatre", category: "Ritual & performance", coordinates: { lat: 15.49, lng: 73.83 }, reference: "Sangeet Natak Akademi ICH inventory" },
+  { region: "Gujarat", district: "Patan", tradition: "Patola double ikat weaving", category: "Traditional weaving", coordinates: { lat: 23.85, lng: 72.13 }, reference: "Sangeet Natak Akademi ICH inventory" },
+  { region: "Haryana", district: "Nuh", tradition: "Jangam Gayan", category: "Folk music", coordinates: { lat: 28.10, lng: 77.00 }, reference: "Sangeet Natak Akademi ICH inventory" },
+  { region: "Himachal Pradesh", district: "Chamba", tradition: "Gaddi Jatar", category: "Festival & oral tradition", coordinates: { lat: 32.56, lng: 76.13 }, reference: "Sangeet Natak Akademi ICH inventory" },
+  { region: "Jharkhand", district: "Seraikela Kharsawan", tradition: "Chhau dance", category: "Ritual & performance", coordinates: { lat: 22.70, lng: 85.93 }, reference: "Sangeet Natak Akademi ICH inventory" },
+  { region: "Karnataka", district: "Udupi", tradition: "Yakshagana", category: "Ritual & performance", coordinates: { lat: 13.34, lng: 74.75 }, reference: "National orientation reference" },
+  { region: "Kerala", district: "Ernakulam", tradition: "Mudiyettu ritual theatre", category: "Ritual & performance", coordinates: { lat: 9.93, lng: 76.27 }, reference: "Ministry of Culture ICH reference" },
+  { region: "Madhya Pradesh", district: "Dindori", tradition: "Gond painting practices", category: "Visual arts", coordinates: { lat: 22.94, lng: 81.08 }, reference: "Sangeet Natak Akademi ICH inventory" },
+  { region: "Maharashtra", district: "Palghar", tradition: "Warli painting traditions", category: "Visual arts", coordinates: { lat: 19.70, lng: 72.77 }, reference: "National orientation reference" },
+  { region: "Manipur", district: "Imphal East", tradition: "Sankirtana", category: "Ritual & performance", coordinates: { lat: 24.82, lng: 93.94 }, reference: "Ministry of Culture ICH reference" },
+  { region: "Meghalaya", district: "East Khasi Hills", tradition: "Whistled language traditions", category: "Folk music", coordinates: { lat: 25.57, lng: 91.89 }, reference: "Sangeet Natak Akademi ICH inventory" },
+  { region: "Mizoram", district: "Aizawl", tradition: "Cheraw bamboo dance", category: "Ritual & performance", coordinates: { lat: 23.73, lng: 92.72 }, reference: "National orientation reference" },
+  { region: "Nagaland", district: "Kohima", tradition: "Naga weaving traditions", category: "Traditional weaving", coordinates: { lat: 25.68, lng: 94.11 }, reference: "National orientation reference" },
+  { region: "Odisha", district: "Puri", tradition: "Pattachitra painting", category: "Visual arts", coordinates: { lat: 19.81, lng: 85.83 }, reference: "National orientation reference" },
+  { region: "Punjab", district: "Amritsar", tradition: "Thatheras utensil-making", category: "Traditional craft", coordinates: { lat: 31.63, lng: 74.87 }, reference: "Ministry of Culture ICH reference" },
+  { region: "Rajasthan", district: "Jodhpur", tradition: "Kalbelia song and dance", category: "Ritual & performance", coordinates: { lat: 26.24, lng: 73.02 }, reference: "Ministry of Culture ICH reference" },
+  { region: "Sikkim", district: "Gangtok", tradition: "Lama dances", category: "Ritual & performance", coordinates: { lat: 27.34, lng: 88.61 }, reference: "Sangeet Natak Akademi ICH inventory" },
+  { region: "Tamil Nadu", district: "Chennai", tradition: "Kolam threshold drawings", category: "Visual arts", coordinates: { lat: 13.08, lng: 80.27 }, reference: "Sangeet Natak Akademi ICH inventory" },
+  { region: "Telangana", district: "Warangal", tradition: "Perini Shivatandavam", category: "Ritual & performance", coordinates: { lat: 17.97, lng: 79.59 }, reference: "National orientation reference" },
+  { region: "Tripura", district: "West Tripura", tradition: "Rignai textile traditions", category: "Traditional weaving", coordinates: { lat: 23.83, lng: 91.28 }, reference: "National orientation reference" },
+  { region: "Uttar Pradesh", district: "Varanasi", tradition: "Ramlila performance traditions", category: "Ritual & performance", coordinates: { lat: 25.32, lng: 82.97 }, reference: "Ministry of Culture ICH reference" },
+  { region: "Uttarakhand", district: "Almora", tradition: "Aipan art", category: "Visual arts", coordinates: { lat: 29.60, lng: 79.66 }, reference: "Sangeet Natak Akademi ICH inventory" },
+  { region: "West Bengal", district: "Kolkata", tradition: "Durga Puja in Kolkata", category: "Festival & oral tradition", coordinates: { lat: 22.57, lng: 88.36 }, reference: "Ministry of Culture ICH reference" },
+  { region: "Ladakh", district: "Leh", tradition: "Buddhist chanting", category: "Folk music", coordinates: { lat: 34.15, lng: 77.58 }, reference: "Ministry of Culture ICH reference" },
+  { region: "Jammu & Kashmir", district: "Rajouri", tradition: "Bhairav Yatra", category: "Festival & oral tradition", coordinates: { lat: 33.38, lng: 74.31 }, reference: "Sangeet Natak Akademi ICH inventory" },
+];
+
+const slugify = (value: string) => value.toLowerCase().replace(/&/g, "and").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+
+function orientationRecord(seed: NationalOrientationSeed): HeritageRecord {
+  const referenceUrl = seed.reference.includes("Ministry") ? "https://culture.gov.in/intangible-cultural-heritage" : "https://sangeetnatak.gov.in/sections/ICH";
+  const notice = "This is an orientation card for national coverage. No primary testimony, consented practitioner profile, or field-verified interpretation has been added.";
+  const source = evidence("National seeding policy", "No primary testimony has been added to this orientation card.", "—");
+  return {
+    id: `orientation-${slugify(seed.region)}`,
+    slug: `${slugify(seed.region)}-${slugify(seed.tradition)}-orientation`,
+    title: `${seed.tradition} · ${seed.region}`,
+    eyebrow: `${seed.category} · ${seed.region}`,
+    shortDescription: `A clearly labelled national orientation card for ${seed.tradition} in ${seed.region}. It identifies where a consent-led record can be developed; it does not claim to document a community's testimony.`,
+    category: seed.category,
+    region: seed.region,
+    district: seed.district,
+    village: "Public-safe orientation location",
+    originalLanguage: "To be confirmed with contributor",
+    practitionerId: "profile-pending-consent",
+    practitionerName: "Community profile pending consent",
+    status: "pending",
+    publicationState: "public",
+    isDemo: true,
+    sourceLabel: `National orientation seed · ${seed.reference}`,
+    referenceUrl,
+    media: [{ type: "photo", label: "No primary media attached", url: "" }],
+    transcript: { original: "No primary testimony is included in this orientation card.", translation: "A consented source and a human-reviewed translation are required before this becomes a heritage record.", language: "Not yet documented" },
+    knowledge: [
+      { kind: "summary", label: "Coverage note", content: notice, confidence: 1, status: "Human edited", evidence: source },
+      { kind: "procedure", label: "Before documentation", content: ["Identify a consented knowledge holder or community representative.", "Attach an original source recording, image, text, or approved reference.", "Record location and language with public-safety controls.", "Submit the record for community or expert review before publication."], confidence: 1, status: "Human edited", evidence: source },
+      { kind: "materials", label: "Materials", content: ["Not asserted in this orientation card"], confidence: 1, status: "Needs review", evidence: source },
+      { kind: "tools", label: "Tools", content: ["Not asserted in this orientation card"], confidence: 1, status: "Needs review", evidence: source },
+      { kind: "significance", label: "Cultural significance", content: "A significance statement must be developed with source evidence and community context; this card makes no standalone claim.", confidence: 1, status: "Needs review", evidence: source },
+      { kind: "uncertainty", label: "Uncertainty note", content: notice, confidence: 1, status: "Human edited", evidence: source },
+    ],
+    relationships: [{ type: "State or region", label: seed.region, detail: "National archive coverage" }, { type: "Reference", label: seed.reference, detail: "Orientation source" }],
+    risk: { level: "unassessed", explanation: "No at-risk score is assigned before a consented source, community context, and documented factors are available.", factors: [{ label: "Assessment status", value: "Not assessed", note: "An orientation card is not sufficient evidence for a risk score." }] },
+    coordinates: seed.coordinates,
+  };
+}
+
+export const records: HeritageRecord[] = [...assamRecords, ...nationalOrientationSeeds.map(orientationRecord)];
+
+export const statesAndRegions = ["All States & regions", ...Array.from(new Set(records.map((record) => record.region))).sort((a, b) => a.localeCompare(b))];
+export const categories = ["All categories", ...Array.from(new Set(records.map((record) => record.category))).sort((a, b) => a.localeCompare(b))];
+export const languages = ["All languages", ...Array.from(new Set(records.map((record) => record.originalLanguage))).sort((a, b) => a.localeCompare(b))];
 export const riskLevels = ["All risk levels", "Low", "Moderate", "High", "Critical"];
 export const verificationLevels = ["All verification", "Pending", "Community verified", "Expert verified"];
 
