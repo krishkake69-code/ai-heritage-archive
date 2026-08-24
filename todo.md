@@ -1,0 +1,29 @@
+# Project TODO
+
+- [x] Establish Assam-only MVP scope, visual system, roles, consent rules, and publication states
+- [x] Build public archive home and exploration pages with preservation context and featured records
+- [x] Add seeded records for five Assam traditions with source-linked provenance
+- [x] Add heritage record detail pages separating testimony, transcript/translation, AI knowledge, evidence, verification, and relationships
+- [x] Add database schema for heritage records, practitioners, media, transcript segments, knowledge sections, evidence, verification events, risk assessments, relationships, and search documents
+- [x] Add typed backend procedures for public discovery, record creation/editing, processing, verification, map summaries, practitioner directory, and search
+- [x] Add consent-aware Document Heritage workflow with metadata, demo recording, processing states, editable extraction, and review submission
+- [x] Add server-side transcription, translation, structured AI extraction, uncertainty notes, and resilient seeded demo fallback
+- [x] Add reviewer comparison workspace with approval, change requests, comments, and provenance trail
+- [x] Add pending, community verified, and expert verified status handling and display
+- [x] Add reviewer notifications for verification submissions and requested revisions
+- [x] Add natural-language search with publication-safe indexing and filters for region, category, language, risk, and verification
+- [x] Add Assam-focused map with public-safe markers and region/category summaries
+- [x] Add explainable at-risk scoring with factor breakdown and cultural-value caveat
+- [x] Add consented Find a Master directory with filters and approved archive links
+- [x] Add lightweight relationship views across traditions, people, regions, festivals, materials, tools, and processes
+- [x] Add responsive, accessible warm editorial visual design and resilient loading/error/empty states
+- [x] Add unit, backend, AI contract, storage, authorization, and data-quality tests
+- [x] Run type checks, tests, browser walkthroughs, and final visual verification
+- [x] Prepare SIH demo path and save final checkpoint
+- [x] Fix public explorer card layout so the first card does not use the home-page featured treatment
+- [x] Add a designed fallback map surface and marker treatment when external map tiles are unavailable
+- [x] Wire live AI processing into the Document Heritage UI with real media upload/storage, non-demo processing, and failure handling
+- [x] Back natural-language discovery with publication-safe search_documents indexing and tests
+- [x] Add region/category aggregate summaries to the Assam map response and UI
+- [x] Add practitioner detail routes with links to approved related heritage records
+- [x] Expand tests for AI contracts, upload validation/storage paths, draft lifecycle, review decisions, notifications, and seeded data quality

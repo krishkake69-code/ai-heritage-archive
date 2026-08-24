@@ -1,0 +1,1 @@
+ALTER TABLE `search_documents` MODIFY COLUMN `recordId` varchar(180) NOT NULL;

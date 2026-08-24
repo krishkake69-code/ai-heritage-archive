@@ -1,33 +1,49 @@
-import { useAuth } from "@/_core/hooks/useAuth";
+import { useMemo } from "react";
+import { Link } from "wouter";
+import { ArrowDownRight, ArrowUpRight, BookOpen, ChevronRight, CircleDot, FileAudio, MapPinned, Search, ShieldCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
-import { Streamdown } from 'streamdown';
+import { trpc } from "@/lib/trpc";
+import { RecordCard, ProvenanceStrip, RiskBadge, SectionHeading } from "@/components/ArchivePrimitives";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
+const steps = [
+  { number: "01", label: "Preserve", title: "Record the voice", detail: "Video, audio, photographs, text, and place stay attached to the knowledge holder." },
+  { number: "02", label: "Structure", title: "Make meaning searchable", detail: "AI assists with transcript, translation, procedure, materials, and context." },
+  { number: "03", label: "Verify", title: "Keep judgment visible", detail: "Community and expert review make provenance a part of every record." },
+  { number: "04", label: "Discover", title: "Return knowledge to people", detail: "Search, map, relationships, and practitioner profiles open new paths in." },
+];
+
 export default function Home() {
-  // The useAuth hook provides authentication state.
-  // To implement login/logout, call logout(), or start login from an event
-  // handler: onClick={() => startLogin()} (imported from "@/const"). Never call
-  // startLogin() during render (no href={startLogin()}) — it mints a one-time
-  // nonce cookie and must run only at the moment of navigation.
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
+  const listInput = useMemo(() => ({ limit: 3 }), []);
+  const { data: summary } = trpc.archive.summary.useQuery();
+  const { data: records = [], isLoading } = trpc.archive.list.useQuery(listInput);
 
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
+  return <div>
+    <section className="grain paper-grid relative overflow-hidden border-b border-border">
+      <div className="mx-auto grid max-w-[1440px] gap-12 px-5 pb-16 pt-12 sm:px-8 sm:pb-24 sm:pt-20 lg:grid-cols-[1.05fr_.95fr] lg:items-end lg:px-12 lg:pt-24">
+        <div className="relative z-10 max-w-3xl">
+          <div className="mb-8 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-accent"><span className="h-px w-10 bg-accent" /> Assam pilot · 5 living traditions</div>
+          <h1 className="max-w-4xl font-display text-[clamp(3.9rem,9vw,8.2rem)] leading-[.83] tracking-[-0.06em] text-primary">Keep the<br /><em className="text-accent">voice</em> in<br />the archive.</h1>
+          <p className="mt-9 max-w-xl text-base leading-7 text-muted-foreground sm:text-lg">An AI-assisted living archive that turns oral and traditional knowledge into structured, source-linked records — without losing the person, place, or context behind it.</p>
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row"><Link href="/explore" className="group inline-flex items-center justify-center gap-3 rounded-full bg-primary px-6 py-3.5 text-sm font-bold text-primary-foreground transition duration-200 hover:-translate-y-0.5 active:scale-[.97]">Explore Assam’s archive <ArrowUpRight className="size-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" /></Link><Link href="/document" className="inline-flex items-center justify-center gap-3 rounded-full border border-primary/20 bg-background/60 px-6 py-3.5 text-sm font-bold text-primary transition hover:bg-card">Document a tradition <ArrowDownRight className="size-4" /></Link></div>
+          <div className="mt-11 max-w-xl"><ProvenanceStrip /></div>
+        </div>
+        <div className="relative min-h-[420px] lg:min-h-[580px]">
+          <div className="absolute right-0 top-0 h-full w-[88%] overflow-hidden rounded-[2rem] rounded-bl-[7rem] bg-[#cfb995] shadow-[0_24px_60px_rgba(40,52,81,.15)]"><img src="/manus-storage/assam-bamboo-makers_902b5de7.jpg" alt="Bamboo craft reference image for the seeded Assam archive" className="h-full w-full object-cover grayscale-[15%] sepia-[20%]" /><div className="absolute inset-0 bg-gradient-to-t from-[#18233b]/80 via-[#18233b]/5 to-transparent" /><div className="absolute bottom-6 left-6 right-6 flex items-end justify-between gap-5 text-white"><div><p className="font-mono-archive text-[10px] uppercase tracking-[0.18em] text-[#e6ba63]">Featured record · 01</p><p className="mt-2 max-w-[210px] font-display text-3xl leading-none">Bamboo basketry of Majuli</p></div><Link href="/record/bamboo-basketry-majuli" aria-label="Open featured bamboo basketry record" className="grid size-12 shrink-0 place-items-center rounded-full bg-[#f7f1e8] text-primary transition hover:rotate-45"><ArrowUpRight className="size-5" /></Link></div></div>
+          <div className="absolute -left-1 bottom-10 grid size-24 place-items-center rounded-full bg-accent text-center text-accent-foreground shadow-[0_16px_35px_rgba(199,102,61,.28)] sm:-left-6"><span className="font-mono-archive text-[9px] font-bold uppercase leading-4 tracking-[0.14em]">Original<br />voice<br />preserved</span></div>
+          <div className="absolute right-[-12px] top-7 hidden rotate-90 font-mono-archive text-[9px] uppercase tracking-[0.24em] text-muted-foreground sm:block">26°12′N · 92°56′E</div>
+        </div>
+      </div>
+      <div className="pointer-events-none absolute -bottom-16 left-[42%] hidden font-display text-[13rem] leading-none text-primary/[.035] xl:block">अ</div>
+    </section>
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
-    </div>
-  );
+    <section className="border-b border-border bg-card"><div className="mx-auto grid max-w-[1440px] grid-cols-2 divide-x divide-border sm:grid-cols-4"><div className="px-5 py-7 sm:px-8 lg:px-12"><p className="font-mono-archive text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Records</p><p className="mt-2 font-display text-4xl text-primary">{summary?.records ?? 5}</p></div><div className="px-5 py-7 sm:px-8 lg:px-12"><p className="font-mono-archive text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Traditions</p><p className="mt-2 font-display text-4xl text-primary">{summary?.traditions ?? 5}</p></div><div className="px-5 py-7 sm:px-8 lg:px-12"><p className="font-mono-archive text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Knowledge holders</p><p className="mt-2 font-display text-4xl text-primary">{summary?.practitioners ?? 4}</p></div><div className="px-5 py-7 sm:px-8 lg:px-12"><p className="font-mono-archive text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Prioritised for care</p><p className="mt-2 font-display text-4xl text-accent">{summary?.atRisk ?? 2}</p></div></div></section>
+
+    <section className="mx-auto max-w-[1440px] px-5 py-20 sm:px-8 lg:px-12 lg:py-28"><SectionHeading kicker="A different kind of archive" title="A record is more than a summary." description="Preservation starts with the source. Every structured field keeps a visible path back to the original testimony, and every status tells you who has reviewed it." action={<Link href="/explore" className="archive-link inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-accent">See how it works <ArrowUpRight className="size-4" /></Link>} /><div className="grid gap-4 lg:grid-cols-4">{steps.map((step, index) => <article key={step.number} className={`relative rounded-2xl p-6 ${index === 0 ? "bg-primary text-primary-foreground" : "border border-border bg-background"}`}><div className="flex items-start justify-between"><span className="font-mono-archive text-[10px] text-accent">{step.number}</span>{index === 0 ? <FileAudio className="size-5 text-[#e6ba63]" /> : index === 1 ? <Sparkles className="size-5 text-accent" /> : index === 2 ? <ShieldCheck className="size-5 text-[#5a8c74]" /> : <Search className="size-5 text-accent" />}</div><p className={`mt-14 text-[10px] font-bold uppercase tracking-[0.15em] ${index === 0 ? "text-[#e6ba63]" : "text-accent"}`}>{step.label}</p><h3 className={`mt-2 font-display text-3xl leading-none ${index === 0 ? "text-white" : "text-primary"}`}>{step.title}</h3><p className={`mt-4 text-sm leading-6 ${index === 0 ? "text-primary-foreground/65" : "text-muted-foreground"}`}>{step.detail}</p></article>)}</div></section>
+
+    <section className="bg-[#efe5d5] py-20 sm:py-24"><div className="mx-auto max-w-[1440px] px-5 sm:px-8 lg:px-12"><SectionHeading kicker="Featured from Assam" title="Five traditions. One living pilot." description="A small, careful beginning: seeded records that make the full preserve → structure → verify → discover workflow tangible." action={<Link href="/explore" className="archive-link inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.13em] text-accent">View all records <ArrowUpRight className="size-4" /></Link>} />{isLoading ? <div className="grid gap-5 lg:grid-cols-3"><div className="h-96 animate-pulse rounded-2xl bg-background/60" /><div className="h-96 animate-pulse rounded-2xl bg-background/60" /><div className="h-96 animate-pulse rounded-2xl bg-background/60" /></div> : <div className="grid gap-5 lg:grid-cols-3">{records.map((record, index) => <RecordCard key={record.id} record={record} featured={index === 0} />)}</div>}</div></section>
+
+    <section className="mx-auto max-w-[1440px] px-5 py-20 sm:px-8 lg:px-12 lg:py-28"><div className="grid gap-12 lg:grid-cols-[.8fr_1.2fr] lg:items-start"><div><p className="font-mono-archive text-[10px] uppercase tracking-[0.2em] text-accent">Built around care</p><h2 className="mt-4 max-w-md font-display text-5xl leading-[.9] tracking-[-.04em] text-primary sm:text-6xl">The archive stays accountable to the source.</h2><p className="mt-6 max-w-md text-sm leading-7 text-muted-foreground">AI can help make a recording legible and discoverable. It cannot decide what a community means. That is why provenance, consent, and human review are part of the interface — not hidden in the fine print.</p><Link href="/document" className="mt-8 inline-flex items-center gap-2 text-sm font-bold text-accent">Start a consent-aware record <ChevronRight className="size-4" /></Link></div><div className="grid gap-4 sm:grid-cols-2"><article className="rounded-2xl border border-border bg-card p-6"><CircleDot className="size-5 text-accent" /><h3 className="mt-12 font-display text-3xl text-primary">Evidence first</h3><p className="mt-3 text-sm leading-6 text-muted-foreground">Open the exact source quote or time cue behind a structured field. Original testimony stays primary.</p></article><article className="rounded-2xl border border-border bg-card p-6"><MapPinned className="size-5 text-accent" /><h3 className="mt-12 font-display text-3xl text-primary">Place matters</h3><p className="mt-3 text-sm leading-6 text-muted-foreground">Explore Assam by public-safe location, with regional variations and relationships kept in view.</p></article><article className="rounded-2xl border border-border bg-card p-6 sm:col-span-2"><BookOpen className="size-5 text-accent" /><div className="mt-10 flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><h3 className="font-display text-3xl text-primary">An archive that can be questioned</h3><p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">Every record carries its status: pending, community verified, or expert verified. Uncertainty is a useful part of the record, not a flaw to conceal.</p></div><RiskBadge level="high" score={78} /></div></article></div></div></section>
+
+    <section className="border-t border-border bg-primary px-5 py-16 text-primary-foreground sm:px-8 lg:px-12 lg:py-20"><div className="mx-auto flex max-w-[1440px] flex-col justify-between gap-8 lg:flex-row lg:items-end"><div><p className="font-mono-archive text-[10px] uppercase tracking-[0.2em] text-[#e6ba63]">The next voice could be yours to preserve</p><h2 className="mt-4 max-w-2xl font-display text-5xl leading-[.9] tracking-[-.04em] text-white sm:text-7xl">Make a living record.</h2></div><div className="flex flex-col items-start gap-4 sm:flex-row"><Link href="/document" className="inline-flex items-center gap-3 rounded-full bg-accent px-6 py-3.5 text-sm font-bold text-accent-foreground transition hover:-translate-y-0.5">Document heritage <ArrowUpRight className="size-4" /></Link><Link href="/map" className="inline-flex items-center gap-3 rounded-full border border-primary-foreground/25 px-6 py-3.5 text-sm font-bold text-white transition hover:bg-primary-foreground/10">Open the map <MapPinned className="size-4" /></Link></div></div></section>
+  </div>;
 }

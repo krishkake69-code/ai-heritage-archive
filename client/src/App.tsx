@@ -1,35 +1,42 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
+import Home from "@/pages/Home";
+import Explore from "@/pages/Explore";
+import RecordDetail from "@/pages/RecordDetail";
+import MapPage from "@/pages/MapPage";
+import FindMaster from "@/pages/FindMaster";
+import PractitionerProfile from "@/pages/PractitionerProfile";
+import DocumentHeritage from "@/pages/DocumentHeritage";
+import Review from "@/pages/Review";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
+import ArchiveLayout from "./components/ArchiveLayout";
 
 function Router() {
-  // make sure to consider if you need authentication for certain routes
   return (
-    <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/404"} component={NotFound} />
-      {/* Final fallback route */}
-      <Route component={NotFound} />
-    </Switch>
+    <ArchiveLayout>
+      <Switch>
+        <Route path="/" component={Home} />
+        <Route path="/explore" component={Explore} />
+        <Route path="/record/:slug" component={RecordDetail} />
+        <Route path="/map" component={MapPage} />
+        <Route path="/masters" component={FindMaster} />
+        <Route path="/master/:id" component={PractitionerProfile} />
+        <Route path="/document" component={DocumentHeritage} />
+        <Route path="/verify" component={Review} />
+        <Route path="/404" component={NotFound} />
+        <Route component={NotFound} />
+      </Switch>
+    </ArchiveLayout>
   );
 }
 
-// NOTE: About Theme
-// - First choose a default theme according to your design style (dark or light bg), than change color palette in index.css
-//   to keep consistent foreground/background color across components
-// - If you want to make theme switchable, pass `switchable` ThemeProvider and use `useTheme` hook
-
-function App() {
+export default function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider
-        defaultTheme="light"
-        // switchable
-      >
+      <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
           <Router />
@@ -38,5 +45,3 @@ function App() {
     </ErrorBoundary>
   );
 }
-
-export default App;

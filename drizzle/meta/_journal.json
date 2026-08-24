@@ -1,5 +1,27 @@
 {
   "version": "7",
   "dialect": "mysql",
-  "entries": []
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1787562801012,
+      "tag": "0000_abnormal_invaders",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1787563077181,
+      "tag": "0001_woozy_shatterstar",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1787564399685,
+      "tag": "0002_black_blazing_skull",
+      "breakpoints": true
+    }
+  ]
 }
