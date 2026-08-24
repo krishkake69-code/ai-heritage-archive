@@ -92,21 +92,30 @@ const FORGE_BASE_URL =
   "https://forge.butterfly-effect.dev";
 const MAPS_PROXY_URL = `${FORGE_BASE_URL}/v1/maps/proxy`;
 
+let mapsScriptPromise: Promise<void> | undefined;
+
 function loadMapScript() {
-  return new Promise(resolve => {
+  if (window.google?.maps) return Promise.resolve();
+  if (mapsScriptPromise) return mapsScriptPromise;
+
+  mapsScriptPromise = new Promise<void>((resolve, reject) => {
     const script = document.createElement("script");
     script.src = `${MAPS_PROXY_URL}/maps/api/js?key=${API_KEY}&v=weekly&libraries=marker,places,geocoding,geometry`;
     script.async = true;
     script.crossOrigin = "anonymous";
     script.onload = () => {
-      resolve(null);
-      script.remove(); // Clean up immediately
+      script.remove();
+      resolve();
     };
     script.onerror = () => {
-      console.error("Failed to load Google Maps script");
+      mapsScriptPromise = undefined;
+      script.remove();
+      reject(new Error("Google Maps script could not be loaded."));
     };
     document.head.appendChild(script);
   });
+
+  return mapsScriptPromise;
 }
 
 interface MapViewProps {
@@ -124,13 +133,15 @@ export function MapView({
 }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<google.maps.Map | null>(null);
+  const mounted = useRef(false);
 
   const init = usePersistFn(async () => {
-    await loadMapScript();
-    if (!mapContainer.current) {
-      console.error("Map container not found");
+    try {
+      await loadMapScript();
+    } catch {
       return;
     }
+    if (!mounted.current || !mapContainer.current || !window.google?.maps) return;
     map.current = new window.google.maps.Map(mapContainer.current, {
       zoom: initialZoom,
       center: initialCenter,
@@ -146,7 +157,12 @@ export function MapView({
   });
 
   useEffect(() => {
-    init();
+    mounted.current = true;
+    void init();
+    return () => {
+      mounted.current = false;
+      map.current = null;
+    };
   }, [init]);
 
   return (

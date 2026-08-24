@@ -27,3 +27,4 @@
 - [x] Add region/category aggregate summaries to the Assam map response and UI
 - [x] Add practitioner detail routes with links to approved related heritage records
 - [x] Expand tests for AI contracts, upload validation/storage paths, draft lifecycle, review decisions, notifications, and seeded data quality
+- [x] Prevent detached map initialization from logging “Map container not found” on non-map routes
